@@ -6,7 +6,7 @@
 ### Getting Setup
 
 #### Prerequisites
-- Install Golang 1.11 or later
+- Install Golang 1.12 or later
     - `brew install go`
     - Make sure the _gobin_ is setup on your `PATH`
     - `vim ~/.zshrc`

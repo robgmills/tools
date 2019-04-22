@@ -9,41 +9,33 @@ RUN apk add tzdata zip make git --no-cache
 WORKDIR /usr/share/zoneinfo
 RUN zip -r -q -0 /zoneinfo.zip .
 
+RUN mkdir -p /go/src/github.com/spothero/<%=appName%>
 WORKDIR /go/src/github.com/spothero/<%=appName%>
 
 # Configure container version variables
 ARG GIT_SHA="not-set"
-ARG VERSION_MAJOR=1
-ARG VERSION_MINOR=0
-ARG VERSION_PATCH=28
+ARG VERSION_MAJOR=test
+ARG VERSION_MINOR=test
+ARG VERSION_PATCH=test
 ENV GIT_SHA $GIT_SHA
 ENV VERSION_MAJOR $VERSION_MAJOR
 ENV VERSION_MINOR $VERSION_MINOR
 ENV VERSION_PATCH $VERSION_PATCH
 ENV VERSION $VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH
 
-# Configure Git for private access
-ARG GITHUB_TOKEN="not-set"
-ENV GITHUB_TOKEN $GITHUB_TOKEN
-RUN git config --global url."https://".insteadOf git://
-RUN echo "machine github.com login spotheropullonly password $GITHUB_TOKEN" > /root/.netrc
+# Install dep and dependencies
+# TODO: GoModules
+RUN go get -u github.com/golang/dep/cmd/dep
+COPY Gopkg.toml /go/src/github.com/spothero/spotbot/Gopkg.toml
+COPY Gopkg.lock /go/src/github.com/spothero/spotbot/Gopkg.lock
+RUN dep ensure -v -vendor-only
 
 # Copy necessary build files
-RUN mkdir -p /go/src/github.com/spothero/<%=appName%>
-COPY Makefile /go/src/github.com/spothero/<%=appName%>/Makefile
 COPY cmd/ /go/src/github.com/spothero/<%=appName%>/cmd
 COPY pkg/ /go/src/github.com/spothero/<%=appName%>/pkg
-COPY Gopkg.toml /go/src/github.com/spothero/<%=appName%>/Gopkg.toml
-COPY Gopkg.lock /go/src/github.com/spothero/<%=appName%>/Gopkg.lock
 
-# Execute tests if requested
-ENV GOOS=linux
-ENV CGO_ENABLED=0
-ARG EXECUTE_TESTS=false
-ENV EXECUTE_TESTS $EXECUTE_TESTS
-RUN make production
-RUN if [ "$EXECUTE_TESTS" = true ]; then make test; fi
-RUN rm /root/.netrc
+# Build Server
+RUN GOOS=linux CGO_ENABLED=0 go build -ldflags="-X main.version=${VERSION} -X main.gitSHA=${GIT_SHA} -s -w" cmd/cmd.go
 
 ##############################################################################
 ### Create the Production Image
@@ -52,6 +44,7 @@ FROM scratch
 
 # Copy timezone database and tell Go where to look for it
 COPY --from=builder zoneinfo.zip /usr/local/go/lib/time/zoneinfo.zip
+
 # Copy CA certs
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 

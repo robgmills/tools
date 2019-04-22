@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
-// RegisterMuxes is a callback used to register HTTP endpoints to the default server
+// RegisterHandlers is a callback used to register HTTP endpoints to the default server
 // NOTE: The HTTP server automatically registers /health and /metrics -- Have a look in your
 // browser!
-func RegisterMuxes(mux *http.ServeMux) {
+func RegisterHandlers(router *mux.Router) {
 	mux.HandleFunc("/", helloWorld)
 	mux.HandleFunc("/best-language", bestLanguage)
 }
