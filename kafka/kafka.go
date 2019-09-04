@@ -111,7 +111,7 @@ func (c Config) NewClient(ctx context.Context) (Client, error) {
 	kafkaConfig.Version = kafkaVersion
 	kafkaConfig.Consumer.Return.Errors = true
 	kafkaConfig.ClientID = c.ClientID
-	kafkaConfig.Producer.RequiredAcks = sarama.WaitForAll
+	kafkaConfig.Producer.RequiredAcks = sarama.NoResponse
 	kafkaConfig.Producer.Return.Successes = true
 	kafkaConfig.Producer.Return.Errors = true
 	var compressionCodec sarama.CompressionCodec
