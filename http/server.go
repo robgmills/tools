@@ -25,6 +25,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/spothero/tools/http/ready"
 	"github.com/spothero/tools/http/writer"
 	"github.com/spothero/tools/log"
 	"go.uber.org/zap"
@@ -48,6 +49,7 @@ type Config struct {
 	RegisterHandlers func(*mux.Router)                                                  // Handler registration callback function. Register your routes in this function.
 	Middleware       []mux.MiddlewareFunc                                               // A list of global middleware functions to be called. Order is honored.
 	CancelSignals    []os.Signal                                                        // OS Signals to be used to cancel running servers. Defaults to SIGINT/`os.Interrupt`.
+	ReadyIndicators  map[string]ready.Indicator
 }
 
 // Server contains unexported fields and is used to start and manage the Server.
@@ -98,6 +100,9 @@ func (c Config) NewServer() Server {
 	}
 	if c.MetricsHandler {
 		router.Handle("/metrics", promhttp.Handler())
+	}
+	if len(c.ReadyIndicators) > 0 {
+		router.HandleFunc("/ready", readyHandler(c.ReadyIndicators))
 	}
 	if c.RegisterHandlers != nil {
 		c.RegisterHandlers(router)

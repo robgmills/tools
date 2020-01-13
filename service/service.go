@@ -72,6 +72,7 @@ func (c Config) ServerCmd(
 		log.HTTPServerMiddleware,
 		sentry.NewMiddleware().HTTP,
 	}
+	httpConfig.ReadyIndicators = c.ReadyIndicators
 
 	// GRPC Config
 	grpcConfig := shGRPC.Config{}

@@ -21,6 +21,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
+	"github.com/spothero/tools/http/ready"
 )
 
 // Config defines service level configuration for HTTP servers
@@ -31,6 +32,7 @@ type Config struct {
 	GitSHA        string                // GitSHA of the application when compiled
 	Registry      prometheus.Registerer // The Prometheus Registry to use. If nil, the global registry is used by default.
 	CancelSignals []os.Signal           // OS Signals to be used to cancel running servers. Defaults to SIGINT/`os.Interrupt`.
+	ReadyIndicators map[string]ready.Indicator
 
 	// A function to be called before starting the service. The context passed into the ServerCmd function will be
 	// fed all the way through PreStart and into PostShutdown, enabling communication of state through these functions.

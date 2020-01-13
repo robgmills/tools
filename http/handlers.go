@@ -15,11 +15,31 @@
 package http
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/spothero/tools/http/ready"
+	"github.com/spothero/tools/log"
+	"go.uber.org/zap"
 )
 
 // healthHandler is a simple HTTP handler that returns 200 OK
 func healthHandler(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprint(w, "OK")
+}
+
+func readyHandler(indicators map[string]ready.Indicator) http.HandlerFunc {
+	monitor := ready.NewMonitor(indicators)
+	return func(w http.ResponseWriter, r *http.Request) {
+		report := monitor.ReadyCheck()
+		if err := json.NewEncoder(w).Encode(report); err != nil {
+			log.Get(context.Background()).Error("Error encoding json response", zap.Error(err))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		if report.Overall != ready.Ready {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+	}
 }
